@@ -69,6 +69,10 @@ class ContextImpl(pulsar.Context):
                                     'Pulsar Function user defined metric',
                                         ContextImpl.user_metrics_label_names)
     self.stats = stats
+    self.state_manager = None
+
+  def set_state_manager(self, state_manager):
+    self.state_manager = state_manager
 
   # Called on a per message basis to set the context for the current message
   def set_current_message_context(self, message, topic):
@@ -227,17 +231,40 @@ class ContextImpl(pulsar.Context):
 
     return metrics_map
 
-  def incr_counter(self, key, amount):
-    return self.state_context.incr(key, amount)
+  def get_state_context(self, tenant, ns, name):
+    return self.state_manager.get_state(tenant, ns, name)
 
-  def get_counter(self, key):
-    return self.state_context.get_amount(key)
+  def incr_counter(self, key, amount, tenant=None, ns=None, name=None):
+    if tenant is None or ns is None or name is None:
+      return self.state_context.incr(key, amount)
+    else:
+      state_context = self.get_state_context(tenant, ns, name)
+      return state_context.incr(key, amount)
 
-  def del_counter(self, key):
-    return self.state_context.delete(key)
+  def get_counter(self, key, tenant=None, ns=None, name=None):
+    if tenant is None or ns is None or name is None:
+      return self.state_context.get_amount(key)
+    else:
+      state_context = self.get_state_context(tenant, ns, name)
+      return state_context.get_amount(key)
 
-  def put_state(self, key, value):
-    return self.state_context.put(key, value)
+  def del_counter(self, key, tenant=None, ns=None, name=None):
+    if tenant is None or ns is None or name is None:
+      return self.state_context.delete(key)
+    else:
+      state_context = self.get_state_context(tenant, ns, name)
+      return state_context.delete(key)
 
-  def get_state(self, key):
-    return self.state_context.get_value(key)
+  def put_state(self, key, value, tenant=None, ns=None, name=None):
+    if tenant is None or ns is None or name is None:
+      return self.state_context.put(key, value)
+    else:
+      state_context = self.get_state_context(tenant, ns, name)
+      return state_context.put(key, value)
+
+  def get_state(self, key, tenant=None, ns=None, name=None):
+    if tenant is None or ns is None or name is None:
+      return self.state_context.get_value(key)
+    else:
+      state_context = self.get_state_context(tenant, ns, name)
+      return state_context.get_value(key)

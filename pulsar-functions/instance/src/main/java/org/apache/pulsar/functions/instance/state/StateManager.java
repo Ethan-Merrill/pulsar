@@ -25,6 +25,14 @@ import org.apache.pulsar.functions.api.StateStore;
  */
 public interface StateManager extends AutoCloseable {
 
+
+    /**
+     * Sets he state store provider
+     * 
+     * @param provider the state store provider to use
+     */
+    void setStateStoreProvider(StateStoreProvider provider);
+
     /**
      * Register the state store.
      *
@@ -41,6 +49,16 @@ public interface StateManager extends AutoCloseable {
      * @return the state store with the given name.
      */
     StateStore getStore(String tenant, String namespace, String name);
+
+    /**
+     * Get (and if needed, create) the state store with the given name.
+     *
+     * @param tenant the state store tenant.
+     * @param namespace the state store namespace.
+     * @param name the state store name.
+     * @return the state store with the given name.
+     */
+    StateStore getCreateStore(String tenant, String namespace, String name);
 
     void close();
 

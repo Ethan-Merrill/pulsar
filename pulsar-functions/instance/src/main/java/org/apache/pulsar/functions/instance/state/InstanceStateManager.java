@@ -25,7 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.functions.api.StateStore;
+import org.apache.pulsar.functions.api.StateStoreContext;
 import org.apache.pulsar.functions.utils.FunctionCommon;
+import org.apache.pulsar.functions.instance.state.StateStoreContextImpl;
 
 /**
  * The state manager for managing state stores for a running function instance.
@@ -34,10 +36,16 @@ import org.apache.pulsar.functions.utils.FunctionCommon;
 public class InstanceStateManager implements StateManager {
 
     private final Map<String, StateStore> stores = new LinkedHashMap<>();
+    private StateStoreProvider stateStoreProvider;
 
     @VisibleForTesting
     boolean isEmpty() {
         return stores.isEmpty();
+    }
+
+    @Override
+    public void setStateStoreProvider(StateStoreProvider provider) {
+        this.stateStoreProvider = provider;
     }
 
     @Override
@@ -54,6 +62,32 @@ public class InstanceStateManager implements StateManager {
     public StateStore getStore(String tenant, String namespace, String name) {
         String storeName = FunctionCommon.getFullyQualifiedName(tenant, namespace, name);
         return stores.get(storeName);
+    }
+
+    @Override
+    public StateStore getCreateStore(String tenant, String namespace, String name) {
+        String storeName = FunctionCommon.getFullyQualifiedName(tenant, namespace, name);
+        StateStore store = stores.get(storeName);
+
+        try {
+            if (store == null) {
+                store = createStore(tenant, namespace, name);
+                registerStore(store);
+            }
+        } catch (Exception e) {
+            System.out.println("CREATE STATE STORE ERROR: " + e.getMessage());
+            e.printStackTrace();
+            store = null;
+        }
+        
+        return store;
+    }
+
+    private StateStore createStore(String tenant, String namespace, String name) throws Exception {
+        StateStore store = stateStoreProvider.getStateStore(tenant, namespace, name);
+        StateStoreContext context = new StateStoreContextImpl();
+        store.init(context);
+        return store;
     }
 
     @Override

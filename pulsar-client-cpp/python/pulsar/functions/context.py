@@ -167,26 +167,26 @@ class Context(object):
     pass
 
   @abstractmethod
-  def incr_counter(self, key, amount):
+  def incr_counter(self, key, amount, tenant, ns, name):
     """incr the counter of a given key in the managed state"""
     pass
 
   @abstractmethod
-  def get_counter(self, key):
+  def get_counter(self, key, tenant, ns, name):
     """get the counter of a given key in the managed state"""
     pass
 
   @abstractmethod
-  def del_counter(self, key):
+  def del_counter(self, key, tenant, ns, name):
     """delete the counter of a given key in the managed state"""
     pass
 
   @abstractmethod
-  def put_state(self, key, value):
+  def put_state(self, key, value, tenant, ns, name):
     """update the value of a given key in the managed state"""
     pass
 
   @abstractmethod
-  def get_state(self, key):
+  def get_state(self, key, tenant, ns, name):
     """get the value of a given key in the managed state"""
     pass

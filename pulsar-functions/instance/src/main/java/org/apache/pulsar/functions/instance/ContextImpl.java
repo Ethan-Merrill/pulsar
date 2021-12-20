@@ -373,17 +373,37 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
         return (S) stateManager.getStore(tenant, ns, name);
     }
 
+    @Override
+    public <S extends StateStore> S getCreateStateStore(String tenant, String ns, String name) {
+        return (S) stateManager.getCreateStore(tenant, ns, name);
+    }
+
     private void ensureStateEnabled() {
-        checkState(null != defaultStateStore, "State %s/%s/%s is not enabled.",
+        ensureStateEnabled(defaultStateStore, 
             config.getFunctionDetails().getTenant(),
             config.getFunctionDetails().getNamespace(),
             config.getFunctionDetails().getName());
     }
 
+    private void ensureStateEnabled(Object obj, String tenant, String ns, String name) {
+        checkState(null != obj, "State %s/%s/%s is not enabled.",
+            tenant,
+            ns,
+            name);
+    }
+
+
     @Override
     public CompletableFuture<Void> incrCounterAsync(String key, long amount) {
         ensureStateEnabled();
         return defaultStateStore.incrCounterAsync(key, amount);
+    }
+
+    @Override
+    public CompletableFuture<Void> incrCounterAsync(String key, long amount, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.incrCounterAsync(key, amount);
     }
 
     @Override
@@ -393,9 +413,24 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
     }
 
     @Override
+    public void incrCounter(String key, long amount, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        stateStore.incrCounter(key, amount);
+    }
+
+
+    @Override
     public CompletableFuture<Long> getCounterAsync(String key) {
         ensureStateEnabled();
         return defaultStateStore.getCounterAsync(key);
+    }
+
+    @Override
+    public CompletableFuture<Long> getCounterAsync(String key, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.getCounterAsync(key);
     }
 
     @Override
@@ -405,9 +440,23 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
     }
 
     @Override
+    public long getCounter(String key, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.getCounter(key);
+    }
+
+    @Override
     public CompletableFuture<Void> putStateAsync(String key, ByteBuffer value) {
         ensureStateEnabled();
         return defaultStateStore.putAsync(key, value);
+    }
+
+    @Override
+    public CompletableFuture<Void> putStateAsync(String key, ByteBuffer value, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.putAsync(key, value);
     }
 
     @Override
@@ -417,9 +466,23 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
     }
 
     @Override
+    public void putState(String key, ByteBuffer value, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        stateStore.put(key, value);
+    }
+
+    @Override
     public CompletableFuture<Void> deleteStateAsync(String key) {
         ensureStateEnabled();
         return defaultStateStore.deleteAsync(key);
+    }
+
+    @Override
+    public CompletableFuture<Void> deleteStateAsync(String key, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.deleteAsync(key);
     }
 
     @Override
@@ -429,15 +492,36 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
     }
 
     @Override
+    public void deleteState(String key, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        stateStore.delete(key);
+    }
+
+    @Override
     public CompletableFuture<ByteBuffer> getStateAsync(String key) {
         ensureStateEnabled();
         return defaultStateStore.getAsync(key);
     }
 
     @Override
+    public CompletableFuture<ByteBuffer> getStateAsync(String key, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.getAsync(key);
+    }
+
+    @Override
     public ByteBuffer getState(String key) {
         ensureStateEnabled();
         return defaultStateStore.get(key);
+    }
+
+    @Override
+    public ByteBuffer getState(String key, String tenant, String ns, String name) {
+        DefaultStateStore stateStore = (DefaultStateStore) getCreateStateStore(tenant, ns, name);
+        ensureStateEnabled(stateStore, tenant, ns, name);
+        return stateStore.get(key);
     }
 
     @Override

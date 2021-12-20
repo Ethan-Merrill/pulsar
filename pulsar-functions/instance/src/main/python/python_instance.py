@@ -42,6 +42,7 @@ import InstanceCommunication_pb2
 
 # state dependencies
 import state_context
+import state_manager
 
 from functools import partial
 from collections import namedtuple
@@ -114,6 +115,7 @@ class PythonInstance(object):
                            instance_id, cluster_name,
                            "%s/%s/%s" % (function_details.tenant, function_details.namespace, function_details.name)]
     self.stats = Stats(self.metrics_labels)
+    self.state_manager = None
 
   def health_check(self):
     self.last_health_check_ts = time.time()
@@ -206,6 +208,10 @@ class PythonInstance(object):
                                                self.user_code, self.consumers,
                                                self.secrets_provider, self.metrics_labels,
                                                self.state_context, self.stats)
+                                               
+    self.state_manager = state_manager.StateManager(self.state_storage_serviceurl)
+    self.contextimpl.set_state_manager(self.state_manager)
+
     # Now launch a thread that does execution
     self.execution_thread = threading.Thread(target=self.actual_execution)
     self.execution_thread.start()
